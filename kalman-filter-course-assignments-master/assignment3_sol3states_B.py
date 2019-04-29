@@ -18,6 +18,10 @@ class KalmanFilter:
         # Expected measurement noise
         self.threshold = np.matrix([[0.1],
                                     [0.1]])
+
+        self.u_steer = 0.
+        self.u_pedal = 0.
+
         ## Initial State (x, y, angle, delta_x, delta_y, delta_angle)
         # Initial State (x, y, delta_x, delta_y)
         # size: #states x 1
@@ -47,15 +51,13 @@ class KalmanFilter:
         # size: #measurements x #states
         self.H = np.matrix([[1., 0., 0., 0., 0.],
                             [0., 1., 0., 0., 0.],
-                            [0., 0., 1., 0., 0.],
                             [0., 0., 0., 1., 0.]])
 
         # Measurement Uncertainty
         # size: #measurements x #measurements
-        self.R = np.matrix([[  3.1,  0.0,  0.0,  0.0],
-                            [  0.0,  3.1,  0.0,  0.0],
-                            [  0.0,  0.0,  1.1,  0.0],
-                            [  0.0,  0.0,  0.0,  1.1]])
+        self.R = np.matrix([[ 50.0,  0.0,  0.0],
+                            [  0.0, 50.0,  0.0],
+                            [  0.0,  0.0, 20.0]])
 
         # Identity Matrix
         # size: #states x #states
@@ -70,19 +72,18 @@ class KalmanFilter:
         self.F[0,2] = dt * math.cos( self.x[3] )
         self.F[1,2] = dt * math.sin( self.x[3] )
         self.F[3,4] = dt
+        self.x[2] += self.u_pedal * 10.0 * dt
+        self.x[4] += self.u_steer * 3.0 * dt
+
         self.x = self.F * self.x
         self.P = self.F * self.P * np.transpose(self.F)
         return [ [self.x[0]], [self.x[1]], [self.x[2]] ]
 
     def measure_and_update(self,measurements, dt):
-        self.F[0,2] = math.cos( self.x[3] )
-        self.F[1,2] = math.sin( self.x[3] )
+        self.F[0,2] = dt * math.cos( self.x[3] )
+        self.F[1,2] = dt * math.sin( self.x[3] )
         self.F[3,4] = dt
-        # sizeof z: 4x1 ==> we get 3 measurements: x, y, direction; we also compute the velocity based on last state and current measurement
-        v = math.sqrt( ( measurements[0] - self.x[0] ) * ( measurements[0] - self.x[0] ) + ( measurements[1] - self.x[1] ) * ( measurements[1] - self.x[1] ))
-        #if( dt > 0.1 ): v = v / dt
-        Z = np.matrix( [ measurements[0], measurements[1], v, measurements[2] ] )
-        #Z = np.matrix( measurements )
+        Z = np.matrix( measurements )
         # sizeof y: 2x1
         y = np.transpose(Z) - self.H * self.x
 
@@ -91,7 +92,11 @@ class KalmanFilter:
         # Subtract the threshold, i.e. all derivation below threshold is considered as measurement noise.
         # Clip and scale it the result to map it to Uncertainty.
         #self.P += np.diag( np.matrix.clip( np.abs(y) - self.threshold, 0.0, 10.0 ) * 400.0 + np.matrix( [[10.1], [10.1]] ) )
-        self.P += np.matrix( [[0.5, 0., 0., 0., 0.], [0., 0.5, 0., 0., 0.], [0., 0., 10.0, 0., 0.], [0., 0., 0., 0.1, 0.], [0.,0., 0., 0., 1.0]] )
+        self.P[0,0] +=  0.2
+        self.P[1,1] +=  0.2
+        self.P[2,2] +=  0.8
+        self.P[3,3] +=  0.1
+        self.P[4,4] +=  0.8
 
         # sizeof S: 2x2
         S = self.H * self.P * np.transpose(self.H) + self.R
@@ -104,6 +109,8 @@ class KalmanFilter:
 
 
     def recieve_inputs(self, u_steer, u_pedal):
+        self.u_steer = u_steer
+        self.u_pedal = u_pedal
         return
 
 sim_run(options,KalmanFilter)

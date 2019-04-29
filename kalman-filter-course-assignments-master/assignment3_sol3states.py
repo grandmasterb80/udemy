@@ -51,9 +51,9 @@ class KalmanFilter:
 
         # Measurement Uncertainty
         # size: #measurements x #measurements
-        self.R = np.matrix([[ 10.0,  0.0,  0.0],
-                            [  0.0, 10.0,  0.0],
-                            [  0.0,  0.0, 10.0]])
+        self.R = np.matrix([[ 50.0,  0.0,  0.0],
+                            [  0.0, 50.0,  0.0],
+                            [  0.0,  0.0, 20.0]])
 
         # Identity Matrix
         # size: #states x #states
@@ -85,7 +85,11 @@ class KalmanFilter:
         # Subtract the threshold, i.e. all derivation below threshold is considered as measurement noise.
         # Clip and scale it the result to map it to Uncertainty.
         #self.P += np.diag( np.matrix.clip( np.abs(y) - self.threshold, 0.0, 10.0 ) * 400.0 + np.matrix( [[10.1], [10.1]] ) )
-        self.P += np.matrix( [[0.5, 0., 0., 0., 0.], [0., 0.5, 0., 0., 0.], [0., 0., 10.0, 0., 0.], [0., 0., 0., 0.1, 0.], [0.,0., 0., 0., 1.0]] )
+        self.P[0,0] +=  0.5
+        self.P[1,1] +=  0.5
+        self.P[2,2] +=  1.0
+        self.P[3,3] +=  0.5
+        self.P[4,4] +=  0.5
 
         # sizeof S: 2x2
         S = self.H * self.P * np.transpose(self.H) + self.R
