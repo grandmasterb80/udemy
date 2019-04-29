@@ -6,7 +6,7 @@ from sim.sim2d import sim_run
 options = {}
 options['FIG_SIZE'] = [10,10]
 
-options['DRIVE_IN_CIRCLE'] = False
+options['DRIVE_IN_CIRCLE'] = True
 # If False, measurements will be x,y.
 # If True, measurements will be x,y, and current angle of the car.
 # Required if you want to pass the driving in circle.
@@ -88,9 +88,6 @@ class KalmanFilter:
         self.x = self.x + K * y
         self.P = (self.I - K * self.H) * self.P
         
-        print ( "X = ", self.x )
-
-        #self.v = math.sqrt( (self.x[2,0] * self.x[2,0]) + (self.x[3,0] * self.x[3,0]) )
         return [ [self.x[0]], [self.x[1]] ]
 
 
