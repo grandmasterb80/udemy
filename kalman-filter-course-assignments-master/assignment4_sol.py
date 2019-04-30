@@ -54,32 +54,6 @@ class KalmanFilter:
                             [0., 0., 0., 1., 0.],
                             [0., 0., 0., 0., 1.]])
 
-
-        ## Initial State
-        #self.x = np.matrix([[55.],
-                            #[3.],
-                            #[5.],
-                            #[0.]])
-
-        ## Uncertainity Matrix
-        #self.P = np.matrix([[0., 0.],
-                            #[0., 0.]])
-
-        ## Next State Function
-        #self.F = np.matrix([[0., 0.],
-                            #[0., 0.]])
-
-        ## Measurement Function
-        #self.H = np.matrix([[0., 0.]])
-
-        ## Measurement Uncertainty
-        #self.R = np.matrix([[0.0]])
-        ## Identity Matrix
-        #self.I = np.matrix([[1., 0., 0., 0.],
-                            #[0., 1., 0., 0.],
-                            #[0., 0., 1., 0.],
-                            #[0., 0., 0., 1.]])
-
     def predictHelper(self, dt):
         F_new = np.copy(self.F)
         # Put dt into the state transition matrix.

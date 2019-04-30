@@ -72,8 +72,8 @@ class KalmanFilter:
         self.F[0,2] = dt * math.cos( self.x[3] )
         self.F[1,2] = dt * math.sin( self.x[3] )
         self.F[3,4] = dt
-        self.x[2] += self.u_pedal * 10.0 * dt
-        self.x[4] += self.u_steer * 3.0 * dt
+        self.x[2] += self.u_pedal * dt
+        self.x[4] = self.u_steer
 
         self.x = self.F * self.x
         self.P = self.F * self.P * np.transpose(self.F)
