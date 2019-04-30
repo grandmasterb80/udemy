@@ -6,6 +6,7 @@ from sim.sim2d_prediction import sim_run
 options = {}
 options['FIG_SIZE'] = [8,8]
 options['ALLOW_SPEEDING'] = False
+#options['ALLOW_SPEEDING'] = True
 
 class KalmanFilter:
     def __init__(self):
@@ -132,8 +133,24 @@ class KalmanFilter:
 
     def predict_red_light_speed(self, light_location):
         light_duration = 3
-        pr = self.predictHelper( light_duration )
-        x_new = pr[2]
+        #pr = self.predictHelper( light_duration )
+        #x_new = pr[2]
+        F_new = np.copy(self.F)
+
+        dt = 1
+        F_new[0,2] = dt * math.cos( self.x[3] )
+        F_new[1,2] = dt * math.sin( self.x[3] )
+        F_new[3,4] = dt
+        x_new = F_new * self.x
+        x_new[2] += 1.5
+
+        dt = light_duration - dt
+        # Put dt into the state transition matrix.
+        F_new[0,2] = dt * math.cos( x_new[3] )
+        F_new[1,2] = dt * math.sin( x_new[3] )
+        F_new[3,4] = dt
+        x_new = F_new * x_new
+
         if x_new[0] < light_location:
             return [False, x_new[0]]
         else:
