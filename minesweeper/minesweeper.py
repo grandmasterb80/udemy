@@ -25,8 +25,8 @@ from builtins import range, input
 import numpy as np
 import matplotlib.pyplot as plt
 
-WIDTH = 8
-HEIGHT = 8
+WIDTH = 4
+HEIGHT = 4
 
 
 class Agent:
