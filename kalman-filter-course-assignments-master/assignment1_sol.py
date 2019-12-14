@@ -1,3 +1,4 @@
+import math
 import numpy as np
 from sim.sim1d import sim_run
 
@@ -21,7 +22,9 @@ class KalmanFilterToy:
         #weight = 0.5
         # assignment2: for high deviation of measured value and estimated value, we assume a change of velocity
         # Result: fast adaption, low noise when estimated speed and actual speed get close together
-        weight = min( 1.0, abs( x - self.predict(t) ) * 0.8 )
+        
+        diff2 = max( 0.0, abs( x - self.predict(t) ) - 0.05 )   # how much noise we accept
+        weight = max( min( 0.95, diff2 * 0.6 ), 0.15 )
 
         measured_v = ( x - self.prev_x ) / ( t - self.prev_t )
         self.v += ( measured_v - self.v ) * weight

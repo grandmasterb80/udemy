@@ -57,7 +57,7 @@ class KalmanFilter:
         # abs(y) ==> deviation of measured value to predicted value
         # Subtract the threshold, i.e. all derivation below threshold is considered as measurement noise.
         # Clip and scale it the result to map it to Uncertainty.
-        self.P += np.diag( np.matrix.clip( np.abs(y) - self.threshold, 0.0, 10.0 ) * 400.0 )
+        self.P += np.diag( np.matrix.clip( np.abs(y) - self.threshold, 0.0, 10.0 ) * 1200.0 )
 
         S = self.H * self.P * np.transpose(self.H) + self.R
         K = self.P * np.transpose(self.H) * np.linalg.inv(S)
