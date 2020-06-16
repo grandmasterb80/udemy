@@ -13,6 +13,6 @@ if [ -d "mpc-course-assignments_basis" ]; then
   git pull
   cd ..
 else
-  git clone https://github.com/WuStangDan/mpc-course-assignments.git
+  git clone https://github.com/WuStangDan/mpc-course-assignments.git  mpc-course-assignments_basis
 fi
 
