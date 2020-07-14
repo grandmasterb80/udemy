@@ -9,7 +9,7 @@ options['OBSTACLES'] = True
 
 class ModelPredictiveControl:
     def __init__(self):
-        self.horizon = 10
+        self.horizon = 10 # has some overshooting at the target place, 20 stops just right
         #self.horizon = 2
         self.dt = 0.2
 
@@ -70,7 +70,9 @@ class ModelPredictiveControl:
           # costs for obstacle
           dist_to_obs = pow( state[0] - self.x_obs, 2.0 ) + pow( state[1] - self.y_obs, 2.0 )
           if dist_to_obs < 10.0:
-            cost += 100.0 / ( 1.0 + dist_to_obs * dist_to_obs * dist_to_obs * dist_to_obs )
+            cost_obs = 100.0 / ( 1.0 + dist_to_obs * dist_to_obs * dist_to_obs * dist_to_obs )
+          else:
+            cost_obs = 0.0
 
           # distance
           dist2 = pow( state[0] - ref[0], 2.0 ) + pow( state[1] - ref[1], 2.0 )
@@ -105,9 +107,7 @@ class ModelPredictiveControl:
             cost_v_max = 0.0
           #cost_v_max = 0.0
 
-          cost += cost_fuel + cost_v_max + cost_dist + cost_acc + cost_steering + cost_align
-
-
+          cost += cost_obs + cost_fuel + cost_v_max + cost_dist + cost_acc + cost_steering + cost_align
         return cost
 
 sim_run(options, ModelPredictiveControl)
