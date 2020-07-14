@@ -69,8 +69,8 @@ class ModelPredictiveControl:
 
           # costs for obstacle
           dist_to_obs = pow( state[0] - self.x_obs, 2.0 ) + pow( state[1] - self.y_obs, 2.0 )
-          if dist_to_obs < 3.0:
-            cost += 1000.0 / (1.0 + dist_to_obs)
+          if dist_to_obs < 10.0:
+            cost += 100.0 / ( 1.0 + dist_to_obs * dist_to_obs * dist_to_obs * dist_to_obs )
 
           # distance
           dist2 = pow( state[0] - ref[0], 2.0 ) + pow( state[1] - ref[1], 2.0 )
@@ -78,7 +78,7 @@ class ModelPredictiveControl:
           cost_dist = dist * 4.0
 
           # alignment costs (they get higher the closer we get to the target)
-          cost_align = pow( delta_angle, 2.0 ) * ( 2.0 / max( 1.0 / 2.0, dist2 ) )
+          cost_align = pow( delta_angle, 2.0 ) * ( 2.0 / max( 1.0 / 6.0, dist2 ) )
 
           # steering costs
           if k >= 1:
