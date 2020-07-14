@@ -10,7 +10,7 @@ options['OBSTACLES'] = False
 
 class ModelPredictiveControl:
     def __init__(self):
-        self.horizon = 4
+        self.horizon = 10
         self.dt = 0.2
 
         # Reference or set point the controller will achieve.
@@ -20,7 +20,7 @@ class ModelPredictiveControl:
         # description of the car
         self.wheel_base = 2.5
 
-    def my_clamp(self, value, min_value, max_value):
+    def clamp(self, value, min_value, max_value):
       return max(min_value, min( max_value, value ))
 
     def plant_model(self,prev_state, dt, pedal, steering):
@@ -29,8 +29,9 @@ class ModelPredictiveControl:
         psi_t = prev_state[2]
         v_t = prev_state[3]
 
-        self.beta += self.my_clamp( steering - self.beta, -math.pi * 2 * dt, math.pi * 2 * dt )
-        #self.beta = steering
+        # model inertia of steering ==> it is better to consider this in the cost function first!
+        #self.beta += self.my_clamp( steering - self.beta, -math.pi * 2 * dt, math.pi * 2 * dt )
+        self.beta = steering
         a_t = pedal   # air resistance & influence of accelerator pedal
         x_t = x_t + math.cos( psi_t ) * v_t * dt
         y_t = y_t + math.sin( psi_t ) * v_t * dt
@@ -47,21 +48,58 @@ class ModelPredictiveControl:
 
         v_max = 10.0                # speed limit
         for k in range( self.horizon ):
-          #gear = np.sign( state[3] )
+          gear = np.sign( state[3] )
+          v_start = state[3]
           state = self.plant_model( state, self.dt, u[ k*2 ], u[ k*2 + 1 ] );
-          dist2 = pow( state[0] - ref[0], 2.0 ) + pow( state[1] - ref[1], 2.0 )
           delta_angle = state[2] - ref[2]
           # normalize delta_angle to a value between -pi and pi
           while delta_angle > math.pi:
-            delta_angle -= 2*math.pi
+            delta_angle -= 2.0 * math.pi
           while delta_angle < -math.pi:
-            delta_angle += 2*math.pi
-          #if gear * np.sign( state[3] ) < 0:   # extra costs for changing gear
-            #cost += 1.0
-          if abs( state[3] * 3.6 ) > v_max:   # limit speed
-            cost += pow( state[3] * 3.6 - v_max, 2.0) * 1000.0
-          cost += dist2 * 2.0
-          cost += pow( delta_angle, 2.0 )
+            delta_angle += 2.0 * math.pi
+
+          # distance
+          dist2 = pow( state[0] - ref[0], 2.0 ) + pow( state[1] - ref[1], 2.0 )
+          dist = math.sqrt( dist2 )
+          cost_dist = dist * 4.0
+
+          # alignment costs (they get higher the closer we get to the target)
+          cost_align = pow( delta_angle, 2.0 ) * ( 2.0 / max( 1.0 / 2.0, dist2 ) )
+
+          # steering costs
+          if k >= 1:
+            cost_steering = ( u[ k*2 + 1 ] - u[ (k-1)*2 + 1 ] ) ** 2
+          else:
+            cost_steering = 0.0
+          #cost_steering = 0.0
+
+          # acceleration costs
+          cost_acc = (state[3] - v_start) ** 2.0 * 10 * self.clamp( state[3] / ( 2.0 / max( 1.0 / 2.0, dist2 ) ), 0.1, 1.0 )
+          #cost_acc = 0.0
+
+          # fuel consumption: (if pedal position has same sign as velocity, consider it as throttle)
+          if state[3] * u[ k*2 ] > 0:
+            cost_fuel = math.fabs( u[ k*2 ] ) * ( 1.0 / max( 1.0 / 2.0, dist2 ) )
+          else:
+            cost_fuel = 0.0
+          #cost_fuel = 0.0
+
+          # speed limit
+          if abs( state[3] * 3.6 ) > v_max:
+            cost_v_max = pow( state[3] * 3.6 - v_max, 2.0) * 1000.0
+          else:
+            cost_v_max = 0.0
+          #cost_v_max = 0.0
+
+          cost += cost_fuel + cost_v_max + cost_dist + cost_acc + cost_steering + cost_align
+          #if k == 1:
+            #print "cost fuel:", cost_fuel
+            #print "cost_v_max:", cost_v_max
+            #print "cost_dist:", cost_dist
+            #print "cost_acc:", cost_acc
+            #print "cost_steering:", cost_steering
+            #print "cost_align:", cost_align
+
         return cost
 
 sim_run(options, ModelPredictiveControl)
