@@ -2,6 +2,39 @@ import cv2
 import numpy as np
 #import matplotlib.pyplot as plt
 
+def make_coordinates( image, line ):
+    slope, intercept = line
+    y1 = image.shape[ 0 ]
+    y2 = int( y1 * (3/5) )
+    x1 = int( ( y1 - intercept ) / slope )
+    x2 = int( ( y2 - intercept ) / slope )
+    return np.array( [ x1, y1, x2, y2 ] )
+
+def average_slope_intercept( iamge, lines ):
+    left_fit = []
+    right_fit = []
+    for line in lines:
+        x1,y1,x2,y2 = line.reshape(4)
+        parameters = np.polyfit( (x1, x2), (y1, y2), 1 )
+        print ( parameters )
+        slope = parameters[ 0 ]
+        intercept = parameters[ 1 ]
+        if slope > 0:
+            right_fit.append( ( slope, intercept ) )
+        else:
+            left_fit.append( ( slope, intercept ) )
+    print("Left Fit:")
+    print(left_fit)
+    print("Right Fit:")
+    print(right_fit)
+    left_fit_average = np.average( left_fit, axis = 0 )
+    right_fit_average = np.average( right_fit, axis = 0 )
+    print( left_fit_average )
+    print( right_fit_average )
+    left_line = make_coordinates( iamge, left_fit_average )
+    right_line =  make_coordinates( iamge, right_fit_average )
+    return np.array( [ left_line, right_line ] )
+
 
 def canny( image ):
     gray = cv2.cvtColor( image, cv2.COLOR_RGB2GRAY )
@@ -31,13 +64,14 @@ def display_lines( image, lines ):
 
 image = cv2.imread( "Image/test_image.jpg" )
 lane_image = np.copy( image )
-canny = canny( lane_image )
-canny_roi = region_of_interest( canny )
+canny_img = canny( lane_image )
+canny_roi = region_of_interest( canny_img )
 lines = cv2.HoughLinesP( canny_roi, 2, 1*np.pi/180, 100, np.array([]), minLineLength=40, maxLineGap=5 )
-image_with_lanes = display_lines( lane_image, lines )
+averaged_lines = average_slope_intercept( lane_image, lines )
+image_with_lanes = display_lines( lane_image, averaged_lines )
 combo_image = cv2.addWeighted( lane_image, 0.8, image_with_lanes, 1.0, 1.0 )
-cv2.imshow( "Source", image);
-cv2.imshow( "Result", canny);
+cv2.imshow( "Source", image );
+cv2.imshow( "Result", canny_img );
 cv2.imshow( "Region of Interest", canny_roi );
 cv2.imshow( "Lanes", combo_image );
 cv2.waitKey( 0 )
