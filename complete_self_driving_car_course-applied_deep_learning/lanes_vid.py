@@ -68,7 +68,9 @@ print ( "Press 'q' to stop video!" )
 print ( "" )
 print ( "" )
 run = True
-cap = cv2.VideoCapture("test2.mp4")
+filename = "US_50_Roadtrip.mp4"
+#filename = "test2.mp4"
+cap = cv2.VideoCapture( filename )
 while( run and cap.isOpened() ):
     ret, frame = cap.read()
     while run and not ret:
