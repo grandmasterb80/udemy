@@ -24,6 +24,18 @@ else
 fi
 
 
+if [ -d "pathplanning_basis_basis" ]; then
+  chmod a+w pathplanning_basis_basis
+  cd pathplanning_basis_basis
+  git pull
+  cd ..
+  chmod a-w pathplanning_basis
+else
+  git clone https://github.com/WuStangDan/pathplanning.git  pathplanning_basis
+  chmod a-w pathplanning_basis
+fi
+
+
 if [ -d "self-driving-car-sim" ]; then
   chmod a+w self-driving-car-sim
   cd self-driving-car-sim
@@ -34,4 +46,5 @@ else
   git clone https://github.com/udacity/self-driving-car-sim   self-driving-car-sim
   chmod a-w self-driving-car-sim
 fi
+
 
